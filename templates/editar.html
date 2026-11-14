@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Cuerpo Celeste</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div style="max-width: 700px; margin: 40px auto; padding: 25px;" class="glass-panel">
+        <h1 class="text-neon" style="margin-bottom: 10px;">✏️ Editar Registro Espacial</h1>
+        <a href="/control" style="color: #38bdf8; text-decoration: none;">⬅ Cancelar y volver al Panel de Control</a>
+        <hr style="border-color: #334155; margin: 20px 0;">
+
+        <form action="/editar/{{ astro[0] }}" method="POST" style="display: flex; flex-direction: column; gap: 12px;">
+            <label style="color: #94a3b8; font-size: 0.9em;">Nombre del Astro:</label>
+            <input type="text" name="nombre" value="{{ astro[1] }}" required style="padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: white; width: 100%; box-sizing: border-box;">
+
+            <label style="color: #94a3b8; font-size: 0.9em;">Categoría:</label>
+            <select name="categoria" id="select-categoria" required onchange="manejarCategoria()" style="padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: white; width: 100%; box-sizing: border-box;">
+                <option value="Estrella" {% if astro[2] == 'Estrella' %}selected{% endif %}>Estrella</option>
+                <option value="Planeta" {% if astro[2] == 'Planeta' %}selected{% endif %}>Planeta</option>
+                <option value="Nebulosa" {% if astro[2] == 'Nebulosa' %}selected{% endif %}>Nebulosa</option>
+                <option value="Asteroide" {% if astro[2] == 'Asteroide' %}selected{% endif %}>Asteroide</option>
+            </select>
+
+            <div id="campos-estrella" style="display: none; flex-direction: column; gap: 12px; background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 6px; border: 1px dashed #334155;">
+                <small style="color: #38bdf8; font-weight: bold;">✨ Propiedades de Estrellas:</small>
+                <input type="text" name="tipo_estrella" value="{{ astro[3] if astro[3] != '-' else '' }}" placeholder="Tipo de Estrella (ej. Gigante Roja)" style="padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: white; width: 100%; box-sizing: border-box;">
+                
+                <select name="id_constelacion" id="select-constelacion" onchange="manejarConstelacion()" style="padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: white; width: 100%; box-sizing: border-box;">
+                    <option value="">Ninguna / No aplica</option>
+                    {% for con in constelaciones %}
+                        <option value="{{ con[0] }}" {% if astro[7] == con[0] %}selected{% endif %}>{{ con[1] }}</option>
+                    {% endfor %}
+                    <option value="nueva">➕ Agregar nueva constelación...</option>
+                </select>
+
+                <input type="text" name="nueva_constelacion_nombre" id="input-nueva-constelacion" placeholder="Nombre de la nueva constelación" style="display: none; padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: white; width: 100%; box-sizing: border-box;">
+            </div>
+
+            <label style="color: #94a3b8; font-size: 0.9em;">Equipo Necesario:</label>
+            <select name="equipo" required style="padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: white; width: 100%; box-sizing: border-box;">
+                <option value="A simple vista" {% if astro[4] == 'A simple vista' %}selected{% endif %}>A simple vista</option>
+                <option value="Binoculares" {% if astro[4] == 'Binoculares' %}selected{% endif %}>Binoculares</option>
+                <option value="Telescopio" {% if astro[4] == 'Telescopio' %}selected{% endif %}>Telescopio</option>
+            </select>
+
+            <label style="color: #94a3b8; font-size: 0.9em;">Coordenadas:</label>
+            <input type="text" name="coordenadas" value="{{ astro[5] }}" style="padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: white; width: 100%; box-sizing: border-box;">
+
+            <label style="color: #94a3b8; font-size: 0.9em;">Guía Visual / Orientación:</label>
+            <input type="text" name="orientacion" value="{{ astro[6] }}" required style="padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: white; width: 100%; box-sizing: border-box;">
+
+            <button type="submit" class="btn-custom" style="margin-top: 10px; width: 100%;">💾 Guardar Cambios</button>
+        </form>
+    </div>
+
+    <script>
+        // Esto se ejecuta apenas carga la página para mostrar los campos si el astro ya era una estrella
+        document.addEventListener('DOMContentLoaded', () => {
+            manejarCategoria();
+        });
+
+        function manejarCategoria() {
+            const categoriaSelect = document.getElementById('select-categoria');
+            const camposEstrella = document.getElementById('campos-estrella');
+            camposEstrella.style.display = (categoriaSelect.value === 'Estrella') ? 'flex' : 'none';
+        }
+        function manejarConstelacion() {
+            const constelacionSelect = document.getElementById('select-constelacion');
+            const inputNueva = document.getElementById('input-nueva-constelacion');
+            if (constelacionSelect.value === 'nueva') {
+                inputNueva.style.display = 'block';
+                inputNueva.required = true;
+            } else {
+                inputNueva.style.display = 'none';
+                inputNueva.required = false;
+                inputNueva.value = '';
+            }
+        }
+    </script>
+</body>
+</html>
