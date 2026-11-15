@@ -36,41 +36,40 @@ def index():
                            nasa=datos_nasa,
                            mas_cercano=objeto_mas_cercano)
 
-@app.route('/control')
+@app.route('/control', methods=['GET', 'POST'])
 def control():
-    catalogo_db = db.obtener_catalogo()
+    error = None
+    mensaje = None
+
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        categoria = request.form['categoria']
+        tipo_estrella = request.form.get('tipo_estrella') if categoria == 'Estrella' else "-"
+        if not tipo_estrella:
+            tipo_estrella = "-"
+        equipo = request.form['equipo']
+        orientacion = request.form['orientacion']
+        coordenadas = request.form.get('coordenadas') or "No especificada"
+
+        id_constelacion = None
+        selector_constelacion = request.form.get('id_constelacion')
+        if selector_constelacion == 'nueva':
+            nueva_constel = request.form.get('nueva_constelacion_nombre')
+            if nueva_constel:
+                id_constelacion = db.obtener_o_crear_constelacion(nueva_constel)
+        elif selector_constelacion:
+            id_constelacion = int(selector_constelacion)
+
+        guardado = db.insertar_cuerpo(nombre, categoria, tipo_estrella, equipo, coordenadas, orientacion, id_constelacion)
+        
+        if guardado:
+            mensaje = f"✅ '{nombre}' se registró correctamente en la bitácora."
+        else:
+            error = f"⚠️ No es posible duplicar: ya existe un cuerpo celeste llamado '{nombre}'."
+
+    catalogo = db.obtener_catalogo()
     constelaciones = db.obtener_constelaciones()
-    historial = db.obtener_historial()
-    
-    return render_template('control.html', 
-                           catalogo=catalogo_db, 
-                           constelaciones=constelaciones,
-                           historial=historial)
-
-@app.route('/agregar', methods=['POST'])
-def agregar():
-    nombre = request.form['nombre']
-    categoria = request.form['categoria']
-    tipo_estrella = request.form.get('tipo_estrella') or "-"
-    equipo = request.form['equipo']
-    orientacion = request.form['orientacion']
-    coordenadas = request.form.get('coordenadas') or "No especificada"
-    
-    # Lógica inteligente para la constelación
-    id_constelacion = None
-    selector_constelacion = request.form.get('id_constelacion')
-    
-    if selector_constelacion == 'nueva':
-        # Si eligió agregar una nueva, capturamos el texto escrito por el usuario
-        nueva_constel = request.form.get('nueva_constelacion_nombre')
-        if nueva_constel:
-            id_constelacion = db.obtener_o_crear_constelacion(nueva_constel)
-    elif selector_constelacion:
-        id_constelacion = int(selector_constelacion)
-
-    # Intentamos insertar (si la estrella ya existe, el try...except de la BD lo frena limpiamente)
-    db.insertar_cuerpo(nombre, categoria, tipo_estrella, equipo, coordenadas, orientacion, id_constelacion)
-    return redirect(url_for('control'))
+    return render_template('control.html', catalogo=catalogo, constelaciones=constelaciones, error=error, mensaje=mensaje)
 
 @app.route('/registrar_avistamiento', methods=['POST'])
 def registrar_avistamiento():
@@ -107,8 +106,13 @@ def editar(id_cuerpo):
         elif selector_constelacion:
             id_constelacion = int(selector_constelacion)
 
-        db.actualizar_cuerpo(id_cuerpo, nombre, categoria, tipo_estrella, equipo, coordenadas, orientacion, id_constelacion)
-        return redirect(url_for('control'))
+        actualizado = db.actualizar_cuerpo(id_cuerpo, nombre, categoria, tipo_estrella, equipo, coordenadas, orientacion, id_constelacion)
+        if actualizado:
+            return redirect(url_for('control'))
+        else:
+            astro = db.obtener_cuerpo_por_id(id_cuerpo)
+            constelaciones = db.obtener_constelaciones()
+            return render_template('editar.html', astro=astro, constelaciones=constelaciones, error=f"⚠️ Ya existe otro registro con el nombre '{nombre}'.")
 
     astro = db.obtener_cuerpo_por_id(id_cuerpo)
     if not astro:

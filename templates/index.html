@@ -2,132 +2,170 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Estación de Monitoreo Espacial</title>
+    <title>Bitácora de Observación de Cuerpos Celestes</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
-        <h1 class="text-neon" style="text-align: center; margin-bottom: 20px;">Monitoreo Espacial</h1>
-        
-        <div style="text-align: center; margin-bottom: 30px;">
-            <a href="/control" class="btn-custom">Control y Bitácora</a>
-        </div>
-
-        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            
-            <!-- COLUMNA IZQUIERDA: APIS + CÁLCULO MATRICIAL Y POO -->
-            <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 20px;">
-                
-                <!-- RASTREADOR ISS -->
-                <div class="glass-panel" style="margin: 0;">
-                    <h3 class="text-neon" style="margin-bottom: 10px;">Radar ISS (En Vivo)</h3>
-                    {% if iss.exito %}
-                        <p><strong>Latitud:</strong> {{ iss.lat }}</p>
-                        <p><strong>Longitud:</strong> {{ iss.lon }}</p>
-                        <p><strong>Altitud:</strong> {{ iss.alt }} km</p>
-                        <p style="margin-top: 8px;"><strong>Ubicación:</strong> <br><span style="color: #38bdf8; font-weight: bold;">{{ iss.ubicacion_aproximada }}</span></p>
-                    {% else %}
-                        <p style="color: #ef4444;">{{ iss.error }}</p>
-                    {% endif %}
+    <div class="layout-app">
+        <!-- BARRA LATERAL AZUL (BASE DE DATOS Y NAVEGACIÓN) -->
+        <aside class="sidebar-azul">
+            <div>
+                <div class="sidebar-marca">
+                    <h2>🛰️ ORBITAL LOG</h2>
+                    <p>Estación de Monitoreo</p>
                 </div>
 
-                <!-- MOTOR DE MATRICES Y POO -->
-                <div class="glass-panel" style="margin: 0;">
-                    <h3 class="text-neon" style="margin-bottom: 10px;">Vector Orbital (POO / Matriz)</h3>
-                    <p style="font-size: 0.85em; color: #94a3b8; margin-bottom: 8px;">Estación Base: 10.5° N, -66.9° O</p>
-                    {% if mas_cercano %}
-                        {% if mas_cercano is mapping %}
-                            <p><strong>Objeto Evaluado:</strong> {{ mas_cercano.get('nombre', 'ISS') }}</p>
-                            {% set dist = mas_cercano.get('distancia') or mas_cercano.get('distancia_km') %}
-                            {% if dist is not none %}
-                                <p><strong>Distancia Vectorial:</strong> <span style="color: #38bdf8; font-weight: bold;">{{ dist }} km</span></p>
+                <nav class="nav-menu">
+                    <a href="/" class="nav-item activo">📊 Dashboard y Telemetría</a>
+                    <a href="/control" class="nav-item">⚙️ Panel de Control</a>
+                    <a href="#seccion-catalogo" class="nav-item">🔭 Catálogo Estelar</a>
+                </nav>
+            </div>
+
+            <div class="sidebar-db-card">
+                <small>Base de Datos</small>
+                <p><strong>{{ catalogo|length }}</strong> cuerpos celestes registrados y enlazados por constelación.</p>
+            </div>
+        </aside>
+
+        <!-- ÁREA PRINCIPAL EN TONO CREMA -->
+        <main class="contenido-crema">
+            <header class="cabecera-principal">
+                <!-- 👇 AQUÍ ESTÁ EL TÍTULO CON LA TIPOGRAFÍA DESTACADA 👇 -->
+                <h1 class="titulo-principal">Bitácora de Observación de Cuerpos Celestes</h1>
+                <span class="badge-estacion">📍 Estación Base: 10.5° N, -66.9° O</span>
+            </header>
+
+            <!-- FILA SUPERIOR: 3 WIDGETS AZUL TRANSLÚCIDO -->
+            <section class="grid-widgets">
+                <!-- WIDGET 1: ISS EN VIVO + PLANETA TIERRA GIRANDO -->
+                <div class="widget-azul">
+                    <h3 class="widget-titulo"> Telemetría ISS (En Vivo)</h3>
+                    <div class="iss-contenedor-visual">
+                        <div>
+                            {% if iss.exito %}
+                                <p class="dato-linea"><strong>Latitud:</strong> {{ iss.lat }}°</p>
+                                <p class="dato-linea"><strong>Longitud:</strong> {{ iss.lon }}°</p>
+                                <p class="dato-linea"><strong>Altitud:</strong> {{ iss.alt }} km</p>
+                                <p class="dato-linea"><strong>Sobre:</strong> <span class="dato-destacado">{{ iss.ubicacion_aproximada }}</span></p>
+                            {% else %}
+                                <p style="color: #dc2626; font-size: 0.9rem;">{{ iss.error }}</p>
                             {% endif %}
-                        {% else %}
-                            <p style="color: #38bdf8; font-weight: bold;">{{ mas_cercano }}</p>
-                        {% endif %}
-                    {% else %}
-                        <p style="color: #94a3b8; font-size: 0.9em;">Esperando telemetría orbital...</p>
-                    {% endif %}
+                        </div>
+
+                        <!-- PLANETA TIERRA GIRANDO SUAVECITO -->
+                        <div class="globo-tierra" title="Órbita Terrestre en Tiempo Real">
+                            <div class="continentes-animados">
+                                <svg viewBox="0 0 200 100" width="164" height="82">
+                                    <path fill="#34D399" opacity="0.85" d="M25,22 Q38,15 45,28 T40,52 Q32,68 25,80 Q18,65 22,45 Z M65,18 Q82,14 90,26 T85,48 Q75,65 68,75 Q60,55 62,35 Z M125,22 Q138,15 145,28 T140,52 Q132,68 125,80 Q118,65 122,45 Z M165,18 Q182,14 190,26 T185,48 Q175,65 168,75 Q160,55 162,35 Z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- API DE LA NASA: NEOs -->
-                <div class="glass-panel" style="margin: 0;">
-                    <h3 class="text-neon" style="margin-bottom: 10px;">☄️ Objetos NASA (NeoWs)</h3>
+                <!-- WIDGET 2: MÉTRICAS DE OBSERVACIÓN Y RANGO MATRICIAL -->
+                <div class="widget-azul">
+                    <h3 class="widget-titulo">📊 Métricas de Observación</h3>
+                    
+                    <p class="dato-linea">
+                        <strong>Distancia Matricial (ISS):</strong> 
+                        <span class="dato-destacado">
+                            {% if mas_cercano is mapping %}
+                                {{ mas_cercano.get('distancia_aprox', 'Calculando...') }}°
+                            {% else %}
+                                {{ mas_cercano or 'Sin datos' }}
+                            {% endif %}
+                        </span>
+                    </p>
+
+                    <hr style="border: none; border-top: 1px solid rgba(29, 78, 216, 0.15); margin: 10px 0;">
+
+                    <p class="dato-linea">
+                        <strong>Estrellas Catalogadas:</strong> 
+                        <span class="dato-destacado">{{ catalogo | selectattr(2, 'equalto', 'Estrella') | list | length }}</span>
+                    </p>
+                    <p class="dato-linea">
+                        <strong>Planetas, Nebulosas y Otros:</strong> 
+                        <span class="dato-destacado">{{ catalogo | rejectattr(2, 'equalto', 'Estrella') | list | length }}</span>
+                    </p>
+                    <p class="dato-linea">
+                        <strong>Visibles a Simple Vista:</strong> 
+                        <span class="dato-destacado">{{ catalogo | selectattr(4, 'equalto', 'A simple vista') | list | length }}</span>
+                    </p>
+                </div>
+
+                <!-- WIDGET 3: OBJETOS NASA (NEOs) -->
+                <div class="widget-azul">
+                    <h3 class="widget-titulo">☄️ Objetos Cercanos NASA (NeoWs)</h3>
                     {% if nasa.exito and nasa.asteroides %}
-                        <ul style="padding-left: 15px; margin: 0; font-size: 0.9em;">
+                        <ul style="list-style: none; font-size: 0.88rem;">
                         {% for asteroide in nasa.asteroides %}
-                            <li style="margin-bottom: 8px;">
-                                <strong>{{ asteroide.nombre }}</strong><br>
-                                <span style="color: #94a3b8;">Distancia: {{ asteroide.distancia_km }} km</span><br>
+                            <li style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid rgba(29, 78, 216, 0.12);">
+                                <strong>{{ asteroide.nombre }}</strong> — <span style="color: var(--texto-secundario);">{{ asteroide.distancia_km }} km</span><br>
                                 {% if asteroide.peligroso %}
-                                    <span style="color: #ef4444; font-weight: bold;">⚠️ Potencialmente Peligroso</span>
+                                    <span style="color: #dc2626; font-weight: 700;">⚠️ Potencialmente Peligroso</span>
                                 {% else %}
-                                    <span style="color: #10b981;">🟢 Órbita Segura</span>
+                                    <span style="color: #059669; font-weight: 700;">🟢 Órbita Segura</span>
                                 {% endif %}
                             </li>
                         {% endfor %}
                         </ul>
                     {% else %}
-                        <p style="color: #94a3b8; font-size: 0.9em;">Cargando telemetría de asteroides de la NASA...</p>
+                        <p style="color: var(--texto-secundario); font-size: 0.9rem;">Sincronizando telemetría de asteroides...</p>
                     {% endif %}
                 </div>
+            </section>
 
-            </div>
-
-            <!-- COLUMNA DERECHA: CATÁLOGO DE OBSERVACIÓN CON FILTRO -->
-            <div class="glass-panel" style="flex: 2.5; min-width: 380px; margin: 0;">
-                <h3 class="text-neon" style="margin-bottom: 15px;">Catálogo de Observación</h3>
-                
-                <!-- BARRA DE BÚSQUEDA Y FILTRO -->
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <input type="text" id="input-busqueda" onkeyup="filtrarCatalogo()" placeholder="Buscar por nombre, categoría o constelación..." style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: white;">
-                    <button type="button" onclick="filtrarCatalogo()" class="btn-custom">Filtrar</button>
+            <!-- WIDGET INFERIOR: CATÁLOGO DE OBSERVACIÓN CON FILTRO -->
+            <section id="seccion-catalogo" class="widget-azul">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+                    <h3 class="widget-titulo" style="margin-bottom: 0;">Catálogo de Observación</h3>
+                    <div style="display: flex; gap: 8px; flex: 1; max-width: 420px;">
+                        <input type="text" id="input-busqueda" class="input-crema" onkeyup="filtrarCatalogo()" placeholder="Buscar por nombre, categoría o constelación...">
+                        <button type="button" onclick="filtrarCatalogo()" class="btn-azul">Filtrar</button>
+                    </div>
                 </div>
 
-                <table id="tabla-catalogo" class="table-dark" style="width: 100%; border-collapse: collapse;">
+                <table id="tabla-catalogo" class="tabla-celeste">
                     <thead>
-                        <tr style="border-bottom: 2px solid #334155;">
-                            <th style="padding: 10px; width: 25%;">Nombre</th>
-                            <th style="padding: 10px; width: 25%;">Categoría</th>
-                            <th style="padding: 10px; width: 25%;">Constelación</th>
-                            <th style="padding: 10px; width: 25%;">Orientación</th>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Constelación</th>
+                            <th>Orientación / Guía Visual</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for astro in catalogo %}
-                        <tr class="fila-astro" style="border-bottom: 1px solid #1e293b;">
-                            <td style="padding: 12px 10px; font-weight: bold;">{{ astro[1] }}</td>
-                            <td style="padding: 12px 10px;">
+                        <tr class="fila-astro">
+                            <td style="font-weight: 700;">{{ astro[1] }}</td>
+                            <td>
                                 {{ astro[2] }}
                                 {% if astro[3] and astro[3] != '-' %}
-                                    <br><small style="color: #38bdf8; font-size: 0.85em;">({{ astro[3] }})</small>
+                                    <br><small style="color: var(--azul-primario); font-weight: 600;">({{ astro[3] }})</small>
                                 {% endif %}
                             </td>
-                            <td style="padding: 12px 10px;">
-                                <span style="background: #334155; padding: 3px 8px; border-radius: 4px; font-size: 0.85em;">{{ astro[7] }}</span>
-                            </td>
-                            <td style="padding: 12px 10px; color: #94a3b8; font-size: 0.9em;">{{ astro[6] }}</td>
+                            <td><span class="badge-constelacion">{{ astro[7] }}</span></td>
+                            <td style="color: var(--texto-secundario);">{{ astro[6] }}</td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4" style="text-align: center; color: #94a3b8; padding: 20px;">No hay cuerpos celestes registrados.</td>
+                            <td colspan="4" style="text-align: center; color: var(--texto-secundario); padding: 20px;">No hay cuerpos celestes registrados.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-            </div>
-
-        </div>
+            </section>
+        </main>
     </div>
 
     <script>
         function filtrarCatalogo() {
             const texto = document.getElementById('input-busqueda').value.toLowerCase().trim();
             const filas = document.querySelectorAll('#tabla-catalogo tbody .fila-astro');
-            
             filas.forEach(fila => {
-                const contenido = fila.textContent.toLowerCase();
-                fila.style.display = contenido.includes(texto) ? '' : 'none';
+                fila.style.display = fila.textContent.toLowerCase().includes(texto) ? '' : 'none';
             });
         }
     </script>
